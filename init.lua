@@ -8,14 +8,14 @@ vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.clipboard = "unnamedplus"
 vim.opt.termguicolors = true
-
-vim.g.mapleader = " "
-
--- =========================
--- 2. LSP keymaps
--- =========================
-vim.api.nvim_create_autocmd("LspAttach", {
-    callback = function(ev)
+  
+vim.g.mapleader = " "  
+  
+-- =========================  
+-- 2. LSP keymaps  
+-- =========================  
+vim.api.nvim_create_autocmd("LspAttach", {  
+    callback = function(ev)  
         local opts = { buffer = ev.buf }
 
         local telescope = require("telescope.builtin")
@@ -146,6 +146,36 @@ require("lazy").setup({
     },
 
     -- =========================
+    -- Terminal
+    -- =========================
+    {
+        "akinsho/toggleterm.nvim",
+        version = "*",
+        config = function()
+            require("toggleterm").setup({
+                size = 15,
+                open_mapping = [[<C-\>]],
+                direction = "horizontal", -- or "float"
+                start_in_insert = true,
+                persist_size = true,
+
+                -- 👇 This is the important part
+                cwd = function()
+                    return vim.fn.getcwd()
+                end,
+            })
+        end,
+    },
+
+    -- =========================
+    -- Multiline cursor
+    -- =========================
+    {
+        "mg979/vim-visual-multi",
+        branch = "master",
+    },
+
+    -- =========================
     -- Theme
     -- =========================
     {
@@ -189,8 +219,10 @@ require("lazy").setup({
         -- })
         --
 
-local telescope = require("telescope.builtin")
+        local telescope = require("telescope.builtin")
 
-vim.keymap.set("n", "<leader>gc", telescope.git_commits)
-vim.keymap.set("n", "<leader>gs", telescope.git_status)
-vim.keymap.set("n", "<leader>gb", telescope.git_branches)
+        vim.keymap.set("n", "<leader>gc", telescope.git_commits)
+        vim.keymap.set("n", "<leader>gs", telescope.git_status)
+        vim.keymap.set("n", "<leader>gb", telescope.git_branches)
+
+        vim.keymap.set("n", "<leader>tt", "<cmd>ToggleTerm<CR>")
