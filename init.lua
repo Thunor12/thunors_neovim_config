@@ -30,7 +30,8 @@ require("lazy").setup({
          vim.g.magit_discard_untracked_do_delete = 1
       end
    },
-
+   -- VS Code-like multi-cursor editing
+   { "mg979/vim-visual-multi", branch = "master" },
    -- Modern Fuzzy Finder (Replaces CtrlP / Ag seamlessly)
    {
       "nvim-telescope/telescope.nvim",
@@ -250,36 +251,37 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
 -- ============================================================================
 -- 7. PURE NATIVE LSP FOR CLANGD (Zero Plugins, Zero Proxies)
 -- ============================================================================
--- This script instantly links Neovim's internal C engine to your local compiler
 
--- local function launch_native_clangd()
---    if vim.fn.executable("clangd") == 1 then
---       vim.lsp.start({
---          name = "clangd",
---          cmd = { "clangd", "--background-index", "--compile-commands-dir=build" },
---          -- Tell it where your project lives
---          root_dir = vim.fs.root(0, { "compile_commands.json", ".git", "Makefile" }),
---       })
---    end
--- end
-
+-- Function to launch Clangd Language Server natively
 local function launch_native_clangd()
-  if vim.fn.executable("clangd") == 1 then
-    vim.lsp.start({
-      name = "clangd",
-      -- ADDED ARGUMENTS BELOW TO BYPASS AMD/ARM GCC FLAG CONFLICTS
-      cmd = { 
-        "clangd", 
-        "--background-index", 
-        "--compile-commands-dir=build",
-        -- Force clangd to ignore unknown CPU flags or pass them cleanly
-        "-query-driver=/usr/bin/*gcc*,/usr/bin/*g++*",
-        -- Injects fallback optimization flags that clang understands implicitly
-        "--fallback-style=LLVM"
-      },
-      root_dir = vim.fs.root(0, { "compile_commands.json", ".git", "Makefile" }),
-    })
-  end
+   if vim.fn.executable("clangd") == 1 then
+      vim.lsp.start({
+         name = "clangd",
+         -- ADDED ARGUMENTS BELOW TO BYPASS AMD/ARM GCC FLAG CONFLICTS
+         cmd = { 
+            "clangd", 
+            "--background-index", 
+            "--compile-commands-dir=build",
+            -- Force clangd to ignore unknown CPU flags or pass them cleanly
+            "-query-driver=/usr/bin/*gcc*,/usr/bin/*g++*",
+            -- Injects fallback optimization flags that clang understands implicitly
+            "--fallback-style=LLVM"
+         },
+         root_dir = vim.fs.root(0, { "compile_commands.json", ".git", "Makefile" }),
+      })
+   end
+end
+
+-- Function to launch Python Language Server natively
+local function launch_native_pylsp()
+   if vim.fn.executable("pylsp") == 1 then
+      vim.lsp.start({
+         name = "pylsp",
+         cmd = { "pylsp" },
+         -- Automatically tracks your git root, local scripts, or script directories
+         root_dir = vim.fs.root(0, { ".git", "pyproject.toml", "setup.py" }) or vim.fn.getcwd(),
+      })
+   end
 end
 
 
@@ -287,6 +289,11 @@ end
 vim.api.nvim_create_autocmd("FileType", {
    pattern = { "c", "cpp" },
    callback = launch_native_clangd,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+   pattern = "python",
+   callback = launch_native_pylsp,
 })
 
 -- Native LSP Hotkeys (Only active when inside a valid C project)
