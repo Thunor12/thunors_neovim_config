@@ -94,6 +94,42 @@ require("lazy").setup({
          })
       end
    },
+   -- Core utility required by many Neovim Lua plugins
+   { "nvim-lua/plenary.nvim" },
+
+   -- Obsidian markdown engine
+   {
+      "epwalsh/obsidian.nvim",
+      version = "*",
+      lazy = true,
+      ft = "markdown", 
+      dependencies = { "nvim-lua/plenary.nvim" },
+      config = function()
+         require("obsidian").setup({
+
+            workspaces = {
+               {
+                  name = "dynamic-vault",
+                  -- This function runs every time you open a markdown file.
+                  -- It grabs the directory of the current file and makes it the vault!
+                  path = function()
+                     return assert(vim.fs.dirname(vim.api.nvim_buf_get_name(0)))
+                  end,
+                  -- Overrides prevent the plugin from auto-creating `.obsidian` 
+                  -- folders in random directories if you open a random README.md
+                  overrides = {
+                     notes_subdir = vim.NIL,
+                     new_notes_location = "current_dir",
+                     templates = { folder = vim.NIL },
+                     disable_frontmatter = true,
+                  },
+               },
+            },
+
+            ui = { enable = false },
+         })
+      end,
+   },
 
    -- Color Schemes & Statusline
    { "morhetz/gruvbox" },
@@ -284,6 +320,23 @@ local function launch_native_pylsp()
    end
 end
 
+-- Function to launch Rust Analyzer natively
+local function launch_native_rust()
+   if vim.fn.executable("rust-analyzer") == 1 then
+      vim.lsp.start({
+         name = "rust-analyzer",
+         cmd = { "rust-analyzer" },
+         -- Automatically stops at your Cargo.toml file or git root
+         root_dir = vim.fs.root(0, { "Cargo.toml", ".git" }) or vim.fn.getcwd(),
+         settings = {
+            ["rust-analyzer"] = {
+               -- Uses cargo clippy for ultra-precise line error feedback
+               checkOnSave = { command = "clippy" },
+            }
+         }
+      })
+   end
+end
 
 -- Automatically launch the internal link when opening a C or C++ file
 vim.api.nvim_create_autocmd("FileType", {
@@ -294,6 +347,11 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.api.nvim_create_autocmd("FileType", {
    pattern = "python",
    callback = launch_native_pylsp,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+   pattern = "rust",
+   callback = launch_native_rust,
 })
 
 -- Native LSP Hotkeys (Only active when inside a valid C project)
@@ -317,3 +375,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 -- Show the diagnostic/error message under the cursor in a floating window
 map("n", "<leader>e", vim.diagnostic.open_float, { buffer = bufnr, desc = "Show Line Error" })
+
+-- Rename a symbol
+map("n", "<leader>r", vim.lsp.buf.rename, { buffer = bufnr, desc = "Rename Symbol" })
+
