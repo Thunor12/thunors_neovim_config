@@ -199,7 +199,8 @@ vim.api.nvim_create_autocmd("FileType", {
    group = "CustomIndents",
    pattern = { "c", "cpp" },
    callback = function() 
-      set_indent(3, 3) -- Olivier's signature 3-space indentation preserved
+      set_indent(4, 4)
+      pcall(vim.treesitter.start) -- Fails silently if parser is missing
    end,
 })
 
@@ -370,12 +371,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
       -- Manually trigger code completion popup window whenever you want it!
       map("i", "<C-Space>", "<C-x><C-o>", { buffer = bufnr, desc = "Trigger Native Completion" })
+      
+      -- Moved these INSIDE the callback so 'bufnr' is defined
+      map("n", "<leader>e", vim.diagnostic.open_float, { buffer = bufnr, desc = "Show Line Error" })
+      map("n", "<leader>r", vim.lsp.buf.rename, { buffer = bufnr, desc = "Rename Symbol" })
    end,
 })
-
--- Show the diagnostic/error message under the cursor in a floating window
-map("n", "<leader>e", vim.diagnostic.open_float, { buffer = bufnr, desc = "Show Line Error" })
-
--- Rename a symbol
-map("n", "<leader>r", vim.lsp.buf.rename, { buffer = bufnr, desc = "Rename Symbol" })
-
