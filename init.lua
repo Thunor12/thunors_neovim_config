@@ -130,6 +130,17 @@ require("lazy").setup({
          })
       end,
    },
+   -- Tree-sitter parser manager
+   {
+      "nvim-treesitter/nvim-treesitter",
+      build = ":TSUpdate",
+      config = function()
+         require("nvim-treesitter.configs").setup({
+            ensure_installed = { "c", "cpp", "lua", "vim", "bash", "python", "rust" },
+            highlight = { enable = true },
+         })
+      end,
+   },
 
    -- Color Schemes & Statusline
    { "morhetz/gruvbox" },
@@ -209,7 +220,7 @@ vim.api.nvim_create_autocmd("FileType", {
    pattern = { "lua", "javascript", "bash", "sh", "vim", "html", "css" },
    callback = function() 
       set_indent(3, 3) 
-      vim.treesitter.start()
+      pcall(vim.treesitter.start)
    end,
 })
 
